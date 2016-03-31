@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Ui\Component\Layout;
@@ -144,9 +144,16 @@ class Tabs extends \Magento\Framework\View\Layout\Generic implements LayoutInter
 
             $tabComponent = $this->createTabComponent($childComponent, $name);
 
+            if (isset($structure[$name]['dataScope']) && $structure[$name]['dataScope']) {
+                $dataScope = $structure[$name]['dataScope'];
+                unset($structure[$name]['dataScope']);
+            } else {
+                $dataScope = 'data.' . $name;
+            }
+
             $childrenAreas[$name] = [
                 'type' => $tabComponent->getComponentName(),
-                'dataScope' => 'data.' . $name,
+                'dataScope' => $dataScope,
                 'config' => $config,
                 'insertTo' => [
                     $this->namespace . '.sections' => [

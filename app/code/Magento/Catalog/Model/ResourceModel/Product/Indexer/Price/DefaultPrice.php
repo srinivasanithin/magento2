@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Catalog\Model\ResourceModel\Product\Indexer\Price;
@@ -44,11 +44,6 @@ class DefaultPrice extends AbstractIndexer implements PriceInterface
     protected $_eventManager = null;
 
     /**
-     * @var \Magento\Framework\Model\Entity\MetadataPool
-     */
-    protected $metadataPool;
-
-    /**
      * Class constructor
      *
      * @param \Magento\Framework\Model\ResourceModel\Db\Context $context
@@ -56,7 +51,6 @@ class DefaultPrice extends AbstractIndexer implements PriceInterface
      * @param \Magento\Eav\Model\Config $eavConfig
      * @param \Magento\Framework\Event\ManagerInterface $eventManager
      * @param \Magento\Framework\Module\Manager $moduleManager
-     * @param \Magento\Framework\Model\Entity\MetadataPool $metadataPool
      * @param string $connectionName
      */
     public function __construct(
@@ -65,12 +59,10 @@ class DefaultPrice extends AbstractIndexer implements PriceInterface
         \Magento\Eav\Model\Config $eavConfig,
         \Magento\Framework\Event\ManagerInterface $eventManager,
         \Magento\Framework\Module\Manager $moduleManager,
-        \Magento\Framework\Model\Entity\MetadataPool $metadataPool,
         $connectionName = null
     ) {
         $this->_eventManager = $eventManager;
         $this->moduleManager = $moduleManager;
-        $this->metadataPool = $metadataPool;
         parent::__construct($context, $tableStrategy, $eavConfig, $connectionName);
     }
 
@@ -248,7 +240,7 @@ class DefaultPrice extends AbstractIndexer implements PriceInterface
     protected function prepareFinalPriceDataForType($entityIds, $type)
     {
         $this->_prepareDefaultFinalPriceTable();
-        $metadata = $this->metadataPool->getMetadata(\Magento\Catalog\Api\Data\ProductInterface::class);
+        $metadata = $this->getMetadataPool()->getMetadata(\Magento\Catalog\Api\Data\ProductInterface::class);
         $connection = $this->getConnection();
         $select = $connection->select()->from(
             ['e' => $this->getTable('catalog_product_entity')],

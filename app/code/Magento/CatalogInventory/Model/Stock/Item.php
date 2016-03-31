@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\CatalogInventory\Model\Stock;
@@ -177,7 +177,7 @@ class Item extends AbstractExtensibleModel implements StockItemInterface
     {
         $stockId = $this->getData(static::STOCK_ID);
         if ($stockId === null) {
-            $stockId = $this->stockRegistry->getStock()->getStockId();
+            $stockId = $this->stockRegistry->getStock($this->getWebsiteId())->getStockId();
         }
         return (int) $stockId;
     }

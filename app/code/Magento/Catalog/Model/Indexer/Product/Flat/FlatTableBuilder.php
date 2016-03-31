@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Catalog\Model\Indexer\Product\Flat;
@@ -11,6 +11,7 @@ use Magento\Framework\Model\Entity\MetadataPool;
 
 /**
  * Class FlatTableBuilder
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class FlatTableBuilder
 {
@@ -50,27 +51,30 @@ class FlatTableBuilder
     protected $_tableData;
 
     /**
+     * @var \Magento\Framework\App\ResourceConnection
+     */
+    protected $resource;
+
+    /**
      * @param \Magento\Catalog\Helper\Product\Flat\Indexer $productIndexerHelper
      * @param ResourceConnection $resource
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param TableDataInterface $tableData
-     * @param MetadataPool $metadataPool
      */
     public function __construct(
         \Magento\Catalog\Helper\Product\Flat\Indexer $productIndexerHelper,
         \Magento\Framework\App\ResourceConnection $resource,
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Catalog\Model\Indexer\Product\Flat\TableDataInterface $tableData,
-        MetadataPool $metadataPool
+        \Magento\Catalog\Model\Indexer\Product\Flat\TableDataInterface $tableData
     ) {
         $this->_productIndexerHelper = $productIndexerHelper;
+        $this->resource = $resource;
         $this->_connection = $resource->getConnection();
         $this->_config = $config;
         $this->_storeManager = $storeManager;
         $this->_tableData = $tableData;
-        $this->metadataPool = $metadataPool;
     }
 
     /**
@@ -204,7 +208,7 @@ class FlatTableBuilder
      */
     protected function _fillTemporaryFlatTable(array $tables, $storeId, $valueFieldSuffix)
     {
-        $linkField = $this->metadataPool->getMetadata(ProductInterface::class)->getLinkField();
+        $linkField = $this->getMetadataPool()->getMetadata(ProductInterface::class)->getLinkField();
         $select = $this->_connection->select();
         $temporaryFlatTableName = $this->_getTemporaryTableName(
             $this->_productIndexerHelper->getFlatTableName($storeId)
@@ -233,8 +237,12 @@ class FlatTableBuilder
         );
 
         $select->from(
-            ['e' => $entityTemporaryTableName],
+            ['et' => $entityTemporaryTableName],
             $allColumns
+        )->joinInner(
+            ['e' => $this->resource->getTableName('catalog_product_entity')],
+            'e.entity_id = et.entity_id',
+            []
         )->joinInner(
             ['wp' => $this->_productIndexerHelper->getTable('catalog_product_website')],
             'wp.product_id = e.entity_id AND wp.website_id = ' . $websiteId,
@@ -255,7 +263,7 @@ class FlatTableBuilder
 
             $select->joinLeft(
                 $temporaryTableName,
-                "e.${linkField} = " . $temporaryTableName . ".${linkField}",
+                "e.entity_id = " . $temporaryTableName . ".entity_id",
                 $columnsNames
             );
             $allColumns = array_merge($allColumns, $columnsNames);
@@ -269,7 +277,7 @@ class FlatTableBuilder
             if (!empty($columnValueNames)) {
                 $select->joinLeft(
                     $temporaryValueTableName,
-                    "e.${linkField} = " . $temporaryValueTableName . ".${linkField}",
+                    "e.${linkField} = " . $temporaryValueTableName . ".entity_id",
                     $columnValueNames
                 );
                 $allColumns = array_merge($allColumns, $columnValueNames);
@@ -298,7 +306,7 @@ class FlatTableBuilder
         $temporaryFlatTableName = $this->_getTemporaryTableName(
             $this->_productIndexerHelper->getFlatTableName($storeId)
         );
-        $linkField = $this->metadataPool->getMetadata(ProductInterface::class)->getLinkField();
+        $linkField = $this->getMetadataPool()->getMetadata(ProductInterface::class)->getLinkField();
         foreach ($tables as $tableName => $columns) {
             foreach ($columns as $attribute) {
                 /* @var $attribute \Magento\Eav\Model\Entity\Attribute */
@@ -311,15 +319,20 @@ class FlatTableBuilder
                         $storeId .
                         ' AND t.value IS NOT NULL';
                     /** @var $select \Magento\Framework\DB\Select */
-                    $select = $this->_connection->select()->joinInner(
-                        ['t' => $tableName],
-                        $joinCondition,
-                        [$attributeCode => 't.value']
-                    );
+                    $select = $this->_connection->select()
+                        ->joinInner(
+                            ['e' => $this->resource->getTableName('catalog_product_entity')],
+                            'e.entity_id = et.entity_id',
+                            []
+                        )->joinInner(
+                            ['t' => $tableName],
+                            $joinCondition,
+                            [$attributeCode => 't.value']
+                        );
                     if (!empty($changedIds)) {
-                        $select->where($this->_connection->quoteInto('e.entity_id IN (?)', $changedIds));
+                        $select->where($this->_connection->quoteInto('et.entity_id IN (?)', $changedIds));
                     }
-                    $sql = $select->crossUpdateFromSelect(['e' => $temporaryFlatTableName]);
+                    $sql = $select->crossUpdateFromSelect(['et' => $temporaryFlatTableName]);
                     $this->_connection->query($sql);
                 }
 
@@ -327,13 +340,13 @@ class FlatTableBuilder
                 if (isset($flatColumns[$attributeCode . $valueFieldSuffix])) {
                     $select = $this->_connection->select()->joinInner(
                         ['t' => $this->_productIndexerHelper->getTable('eav_attribute_option_value')],
-                        't.option_id = e.' . $attributeCode . ' AND t.store_id=' . $storeId,
+                        't.option_id = et.' . $attributeCode . ' AND t.store_id=' . $storeId,
                         [$attributeCode . $valueFieldSuffix => 't.value']
                     );
                     if (!empty($changedIds)) {
-                        $select->where($this->_connection->quoteInto('e.entity_id IN (?)', $changedIds));
+                        $select->where($this->_connection->quoteInto('et.entity_id IN (?)', $changedIds));
                     }
-                    $sql = $select->crossUpdateFromSelect(['e' => $temporaryFlatTableName]);
+                    $sql = $select->crossUpdateFromSelect(['et' => $temporaryFlatTableName]);
                     $this->_connection->query($sql);
                 }
             }
@@ -349,5 +362,17 @@ class FlatTableBuilder
     protected function _getTemporaryTableName($tableName)
     {
         return sprintf('%s_tmp_indexer', $tableName);
+    }
+
+    /**
+     * @return \Magento\Framework\Model\Entity\MetadataPool
+     */
+    private function getMetadataPool()
+    {
+        if (null === $this->metadataPool) {
+            $this->metadataPool = \Magento\Framework\App\ObjectManager::getInstance()
+                ->get('Magento\Framework\Model\Entity\MetadataPool');
+        }
+        return $this->metadataPool;
     }
 }

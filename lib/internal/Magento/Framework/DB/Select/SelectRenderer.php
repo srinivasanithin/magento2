@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Framework\DB\Select;
@@ -15,7 +15,7 @@ class SelectRenderer implements RendererInterface
     /**
      * @var RendererInterface[]
      */
-    protected $renders;
+    protected $renderers;
 
     /**
      * @param RendererInterface[] $renderers
@@ -23,11 +23,11 @@ class SelectRenderer implements RendererInterface
     public function __construct(
         array $renderers
     ) {
-        $this->renders = $this->sort($renderers);
+        $this->renderers = $this->sort($renderers);
     }
 
     /**
-     * Sort renders
+     * Sort renderers
      *
      * @param array $renders
      * @return array
@@ -66,8 +66,10 @@ class SelectRenderer implements RendererInterface
     public function render(Select $select, $sql = '')
     {
         $sql = Select::SQL_SELECT;
-        foreach ($this->renders as $renderer) {
-            $sql = $renderer['renderer']->render($select, $sql);
+        foreach ($this->renderers as $renderer) {
+            if (in_array($renderer['part'], [Select::COLUMNS, Select::FROM]) || $select->getPart($renderer['part'])) {
+                $sql = $renderer['renderer']->render($select, $sql);
+            }
         }
         return $sql;
     }

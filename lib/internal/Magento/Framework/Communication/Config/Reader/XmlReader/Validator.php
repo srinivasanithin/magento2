@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Framework\Communication\Config\Reader\XmlReader;
@@ -94,14 +94,6 @@ class Validator extends ConfigValidator
             throw new \LogicException(
                 sprintf(
                     'Either "request" or "schema" attribute must be specified for topic "%s"',
-                    $topicName
-                )
-            );
-        }
-        if ($responseSchema && !$handlers) {
-            throw new \LogicException(
-                sprintf(
-                    '"handler" element must be declared for topic "%s", because it has "response" declared',
                     $topicName
                 )
             );

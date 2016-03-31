@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 
@@ -94,7 +94,7 @@ class DiCompileCommand extends Command
     {
         $this->setName(self::NAME)
             ->setDescription(
-                'Generates DI configuration and all non-existing interceptors and factories'
+                'Generates DI configuration and all missing classes that can be auto-generated'
             );
         parent::configure();
     }

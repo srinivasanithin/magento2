@@ -1,12 +1,13 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Catalog\Model\ResourceModel\Product\Link\Product;
 
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Customer\Api\GroupManagementInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Model\Entity\MetadataPool;
 
 /**
@@ -77,7 +78,6 @@ class Collection extends \Magento\Catalog\Model\ResourceModel\Product\Collection
      * @param \Magento\Customer\Model\Session $customerSession
      * @param \Magento\Framework\Stdlib\DateTime $dateTime
      * @param GroupManagementInterface $groupManagement
-     * @param MetadataPool $metadataPool
      * @param \Magento\Framework\DB\Adapter\AdapterInterface|null $connection
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -101,10 +101,8 @@ class Collection extends \Magento\Catalog\Model\ResourceModel\Product\Collection
         \Magento\Customer\Model\Session $customerSession,
         \Magento\Framework\Stdlib\DateTime $dateTime,
         GroupManagementInterface $groupManagement,
-        MetadataPool $metadataPool,
         \Magento\Framework\DB\Adapter\AdapterInterface $connection = null
     ) {
-        $this->metadataPool = $metadataPool;
         parent::__construct(
             $entityFactory,
             $logger,
@@ -128,7 +126,6 @@ class Collection extends \Magento\Catalog\Model\ResourceModel\Product\Collection
             $connection
         );
     }
-
 
     /**
      * Declare link model and initialize type attributes join
@@ -280,23 +277,24 @@ class Collection extends \Magento\Catalog\Model\ResourceModel\Product\Collection
             $connection->quoteInto('links.link_type_id = ?', $this->_linkTypeId),
         ];
         $joinType = 'join';
+        $linkField = $this->getMetadataPool()->getMetadata(ProductInterface::class)->getLinkField();
         if ($this->getProduct() && $this->getProduct()->getId()) {
-            $productId = $this->getProduct()->getData(
-                $this->metadataPool->getMetadata(ProductInterface::class)->getLinkField()
+            $linkFieldId = $this->getProduct()->getData(
+                $linkField
             );
             if ($this->_isStrongMode) {
-                $this->getSelect()->where('links.product_id = ?', (int)$productId);
+                $this->getSelect()->where('links.product_id = ?', (int)$linkFieldId);
             } else {
                 $joinType = 'joinLeft';
-                $joinCondition[] = $connection->quoteInto('links.product_id = ?', $productId);
+                $joinCondition[] = $connection->quoteInto('links.product_id = ?', $linkFieldId);
             }
             $this->addFieldToFilter(
-                'entity_id',
-                ['neq' => $productId]
+                $linkField,
+                ['neq' => $linkFieldId]
             );
         } elseif ($this->_isStrongMode) {
             $this->addFieldToFilter(
-                'entity_id',
+                $linkField,
                 ['eq' => -1]
             );
         }
@@ -420,5 +418,17 @@ class Collection extends \Magento\Catalog\Model\ResourceModel\Product\Collection
             }
         }
         return $this;
+    }
+
+    /**
+     * Get MetadataPool instance
+     * @return MetadataPool
+     */
+    protected function getMetadataPool()
+    {
+        if (!$this->metadataPool) {
+            $this->metadataPool = ObjectManager::getInstance()->get(MetadataPool::class);
+        }
+        return $this->metadataPool;
     }
 }

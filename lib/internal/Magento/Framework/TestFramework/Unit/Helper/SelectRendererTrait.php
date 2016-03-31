@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 
@@ -26,6 +26,7 @@ trait SelectRendererTrait
                             'Magento\Framework\DB\Select\DistinctRenderer'
                         ),
                         'sort' => 11,
+                        'part' => 'distinct',
                     ],
                     'columns' => [
                         'renderer' => $objectManager->getObject(
@@ -35,12 +36,14 @@ trait SelectRendererTrait
                             ]
                         ),
                         'sort' => 11,
+                        'part' => 'columns',
                     ],
                     'union' => [
                         'renderer' => $objectManager->getObject(
                             'Magento\Framework\DB\Select\UnionRenderer'
                         ),
                         'sort' => 11,
+                        'part' => 'union',
                     ],
                     'from' => [
                         'renderer' => $objectManager->getObject(
@@ -50,36 +53,42 @@ trait SelectRendererTrait
                             ]
                         ),
                         'sort' => 11,
+                        'part' => 'from',
                     ],
                     'where' => [
                         'renderer' => $objectManager->getObject(
                             'Magento\Framework\DB\Select\WhereRenderer'
                         ),
                         'sort' => 11,
+                        'part' => 'where',
                     ],
                     'group' => [
                         'renderer' => $objectManager->getObject(
                             'Magento\Framework\DB\Select\GroupRenderer'
                         ),
                         'sort' => 11,
+                        'part' => 'group',
                     ],
                     'having' => [
                         'renderer' => $objectManager->getObject(
                             'Magento\Framework\DB\Select\HavingRenderer'
                         ),
                         'sort' => 11,
+                        'part' => 'having',
                     ],
                     'order' => [
                         'renderer' => $objectManager->getObject(
                             'Magento\Framework\DB\Select\OrderRenderer'
                         ),
                         'sort' => 11,
+                        'part' => 'order',
                     ],
                     'limit' => [
                         'renderer' => $objectManager->getObject(
                             'Magento\Framework\DB\Select\LimitRenderer'
                         ),
                         'sort' => 11,
+                        'part' => 'limitcount',
                     ],
                 ],
             ]

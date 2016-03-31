@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 
@@ -247,7 +247,7 @@ class Type extends \Magento\Catalog\Model\Product\Type\AbstractType
         return $this->_bundleSelection->getChildrenIds($parentId, $required);
     }
 
-  /**
+    /**
      * Retrieve parent ids array by required child
      *
      * @param int|array $childId
@@ -425,7 +425,7 @@ class Type extends \Magento\Catalog\Model\Product\Type\AbstractType
             /** @var \Magento\Bundle\Model\ResourceModel\Option\Collection $optionsCollection */
             $optionsCollection = $this->_bundleOption->create()
                 ->getResourceCollection();
-            $optionsCollection->setProductIdFilter($product->getId());
+            $optionsCollection->setProductIdFilter($product->getEntityId());
             $this->setStoreFilter($product->getStoreId(), $product);
             $optionsCollection->setPositionOrder();
             $storeId = $this->getStoreFilter($product);

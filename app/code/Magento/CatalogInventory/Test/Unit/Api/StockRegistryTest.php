@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\CatalogInventory\Test\Unit\Api;
@@ -58,7 +58,6 @@ class StockRegistryTest extends \PHPUnit_Framework_TestCase
     protected $product;
 
     protected $productId = 111;
-    protected $stockId = 112;
     protected $productSku = 'simple';
     protected $websiteId = 111;
 
@@ -136,7 +135,7 @@ class StockRegistryTest extends \PHPUnit_Framework_TestCase
 
     public function testGetStock()
     {
-        $this->assertEquals($this->stock, $this->stockRegistry->getStock($this->stockId));
+        $this->assertEquals($this->stock, $this->stockRegistry->getStock($this->websiteId));
     }
 
     public function testGetStockItem()

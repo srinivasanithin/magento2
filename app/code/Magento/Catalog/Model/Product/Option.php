@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 
@@ -9,11 +9,13 @@ namespace Magento\Catalog\Model\Product;
 
 use Magento\Catalog\Api\Data\ProductCustomOptionInterface;
 use Magento\Catalog\Api\Data\ProductCustomOptionValuesInterface;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ResourceModel\Product\Option\Value\Collection;
 use Magento\Catalog\Pricing\Price\BasePrice;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\AbstractExtensibleModel;
+use Magento\Framework\Model\Entity\MetadataPool;
 
 /**
  * Catalog product option model
@@ -119,6 +121,11 @@ class Option extends AbstractExtensibleModel implements ProductCustomOptionInter
     protected $validatorPool;
 
     /**
+     * @var MetadataPool
+     */
+    private $metadataPool;
+
+    /**
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\Registry $registry
      * @param \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory
@@ -127,7 +134,6 @@ class Option extends AbstractExtensibleModel implements ProductCustomOptionInter
      * @param Option\Type\Factory $optionFactory
      * @param \Magento\Framework\Stdlib\StringUtils $string
      * @param Option\Validator\Pool $validatorPool
-     * @param \Magento\Catalog\Model\Product\Option\Repository $optionRepository,
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb $resourceCollection
      * @param array $data
@@ -142,7 +148,6 @@ class Option extends AbstractExtensibleModel implements ProductCustomOptionInter
         \Magento\Catalog\Model\Product\Option\Type\Factory $optionFactory,
         \Magento\Framework\Stdlib\StringUtils $string,
         Option\Validator\Pool $validatorPool,
-        \Magento\Catalog\Model\Product\Option\Repository $optionRepository,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
@@ -151,7 +156,6 @@ class Option extends AbstractExtensibleModel implements ProductCustomOptionInter
         $this->optionTypeFactory = $optionFactory;
         $this->validatorPool = $validatorPool;
         $this->string = $string;
-        $this->optionRepository = $optionRepository;
         parent::__construct(
             $context,
             $registry,
@@ -460,7 +464,7 @@ class Option extends AbstractExtensibleModel implements ProductCustomOptionInter
      */
     public function getProductOptions(Product $product)
     {
-        return $this->optionRepository->getProductOptions($product, $this->getAddRequiredFilter());
+        return $this->getOptionRepository()->getProductOptions($product, $this->getAddRequiredFilter());
     }
 
     /**
@@ -667,6 +671,7 @@ class Option extends AbstractExtensibleModel implements ProductCustomOptionInter
     {
         return $this->getData(self::KEY_IMAGE_SIZE_Y);
     }
+
     /**
      * Set product SKU
      *
@@ -831,7 +836,7 @@ class Option extends AbstractExtensibleModel implements ProductCustomOptionInter
         $collection = clone $this->getCollection();
         $collection->addFieldToFilter(
             'product_id',
-            $product->getId()
+            $product->getData($this->getMetadataPool()->getMetadata(ProductInterface::class)->getLinkField())
         )->addTitleToResult(
             $product->getStoreId()
         )->addPriceToResult(
@@ -862,6 +867,30 @@ class Option extends AbstractExtensibleModel implements ProductCustomOptionInter
         \Magento\Catalog\Api\Data\ProductCustomOptionExtensionInterface $extensionAttributes
     ) {
         return $this->_setExtensionAttributes($extensionAttributes);
+    }
+
+    /**
+     * @return Option\Repository
+     */
+    private function getOptionRepository()
+    {
+        if (null === $this->optionRepository) {
+            $this->optionRepository = \Magento\Framework\App\ObjectManager::getInstance()
+                ->get('Magento\Catalog\Model\Product\Option\Repository');
+        }
+        return $this->optionRepository;
+    }
+
+    /**
+     * @return \Magento\Framework\Model\Entity\MetadataPool
+     */
+    private function getMetadataPool()
+    {
+        if (null === $this->metadataPool) {
+            $this->metadataPool = \Magento\Framework\App\ObjectManager::getInstance()
+                ->get('Magento\Framework\Model\Entity\MetadataPool');
+        }
+        return $this->metadataPool;
     }
     //@codeCoverageIgnoreEnd
 }

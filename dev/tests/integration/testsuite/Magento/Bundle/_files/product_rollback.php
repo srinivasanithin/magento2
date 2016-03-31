@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 
@@ -17,9 +17,9 @@ $registry->unregister('isSecureArea');
 $registry->register('isSecureArea', true);
 
 $productRepository = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
-    ->create('Magento\Catalog\Api\ProductRepositoryInterface');
+    ->get('Magento\Catalog\Api\ProductRepositoryInterface');
 try {
-    $product = $productRepository->get('bundle-product');
+    $product = $productRepository->get('bundle-product', false, null, true);
     $productRepository->delete($product);
 } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
     //Product already removed

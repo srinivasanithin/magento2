@@ -1,9 +1,11 @@
 <?php
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 use Magento\Framework\Exception\NoSuchEntityException;
+
+\Magento\TestFramework\Helper\Bootstrap::getInstance()->getInstance()->reinitialize();
 
 /** @var \Magento\Framework\Registry $registry */
 $registry = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get('Magento\Framework\Registry');
@@ -15,7 +17,7 @@ $registry->register('isSecureArea', true);
 $productRepository = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
     ->get('Magento\Catalog\Api\ProductRepositoryInterface');
 try {
-    $product = $productRepository->get('downloadable-product');
+    $product = $productRepository->get('downloadable-product', false, null, true);
     $productRepository->delete($product);
 } catch (NoSuchEntityException $e) {
 

@@ -1,5 +1,5 @@
 /**
- * Copyright © 2015 Magento. All rights reserved.
+ * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
  */
 /*jshint browser:true jquery:true expr:true*/
@@ -65,7 +65,10 @@ define([
             if (productType.type.current === 'downloadable') {
                 weight.change(false);
                 weight.$weightSwitcher().one('change', function () {
-                    $(document).trigger('setTypeProduct', null);
+                    $(document).trigger(
+                        'setTypeProduct',
+                        productType.type.init === 'downloadable' ? 'virtual' : productType.type.init
+                    );
                 });
                 this.show();
             } else {
