@@ -22,6 +22,7 @@ use Magento\Ui\Component\Form\Element\Checkbox;
 use Magento\Ui\Component\Form\Element\ActionDelete;
 use Magento\Ui\Component\Form\Element\DataType\Text;
 use Magento\Ui\Component\Form\Element\DataType\Number;
+use Magento\Framework\Locale\CurrencyInterface;
 
 /**
  * Data provider for "Customizable Options" panel
@@ -111,7 +112,7 @@ class CustomOptions extends AbstractModifier
      * @var UrlInterface
      */
     protected $urlBuilder;
-
+    
     /**
      * @var ArrayManager
      */
@@ -121,6 +122,11 @@ class CustomOptions extends AbstractModifier
      * @var array
      */
     protected $meta = [];
+
+    /**
+     * @var CurrencyInterface
+     */
+    private $localeCurrency;
 
     /**
      * @param LocatorInterface $locator
@@ -156,12 +162,12 @@ class CustomOptions extends AbstractModifier
 
         /** @var \Magento\Catalog\Model\Product\Option $option */
         foreach ($productOptions as $index => $option) {
-            $options[$index] = $this->formatFloatByPath(static::FIELD_PRICE_NAME, $option->getData());
+            $options[$index] = $this->formatPriceByPath(static::FIELD_PRICE_NAME, $option->getData());
             $values = $option->getValues() ?: [];
 
             /** @var \Magento\Catalog\Model\Product\Option $value */
             foreach ($values as $value) {
-                $options[$index][static::GRID_TYPE_SELECT_NAME][] = $this->formatFloatByPath(
+                $options[$index][static::GRID_TYPE_SELECT_NAME][] = $this->formatPriceByPath(
                     static::FIELD_PRICE_NAME,
                     $value->getData()
                 );
@@ -188,12 +194,12 @@ class CustomOptions extends AbstractModifier
      * @param array $data
      * @return array
      */
-    protected function formatFloatByPath($path, array $data)
+    protected function formatPriceByPath($path, array $data)
     {
         $value = $this->arrayManager->get($path, $data);
 
         if (is_numeric($value)) {
-            $data = $this->arrayManager->replace($path, $data, $this->formatFloat($value));
+            $data = $this->arrayManager->replace($path, $data, $this->formatPrice($value));
         }
 
         return $data;
@@ -1068,5 +1074,39 @@ class CustomOptions extends AbstractModifier
     protected function getCurrencySymbol()
     {
         return $this->storeManager->getStore()->getBaseCurrency()->getCurrencySymbol();
+    }
+
+    /**
+     * The getter function to get the locale currency for real application code
+     *
+     * @return \Magento\Framework\Locale\CurrencyInterface
+     *
+     * @deprecated
+     */
+    private function getLocaleCurrency()
+    {
+        if ($this->localeCurrency === null) {
+            $this->localeCurrency = \Magento\Framework\App\ObjectManager::getInstance()->get(CurrencyInterface::class);
+        }
+        return $this->localeCurrency;
+    }
+    
+    /**
+     * Format price according to the locale of the currency
+     *
+     * @param mixed $value
+     * @return string
+     */
+    protected function formatPrice($value)
+    {
+        if (!is_numeric($value)) {
+            return null;
+        }
+
+        $store = $this->storeManager->getStore();
+        $currency = $this->getLocaleCurrency()->getCurrency($store->getBaseCurrencyCode());
+        $value = $currency->toCurrency($value, ['display' => \Magento\Framework\Currency::NO_SYMBOL]);
+
+        return $value;
     }
 }
